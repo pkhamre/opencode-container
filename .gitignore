@@ -27,6 +27,8 @@ __pycache__/
 opencode.json
 .opencode/
 .opencode/cache/
+.agents/
+skills-lock.json
 .cache/opencode/
 
 # Workspace
