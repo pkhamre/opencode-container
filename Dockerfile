@@ -3,7 +3,7 @@ FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c70
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG NODE_MAJOR=24
-ARG OPENCODE_VERSION=1.18.25
+ARG OPENCODE_VERSION=1.18.30
 
 # Proxy passthrough; both cases because apt/curl/gpg prefer lowercase,
 # npm/pip/git differ on which they read. Makefile normalizes so both arrive set.
@@ -51,7 +51,7 @@ RUN echo "Installing OpenCode version: ${OPENCODE_VERSION}" && \
     rm -f /tmp/install-opencode.sh && \
     install -m 0755 /root/.opencode/bin/opencode /usr/local/bin/opencode
 
-RUN npm install -g @upstash/context7-mcp@4.0.4
+RUN npm install -g @upstash/context7-mcp@4.0.6
 
 RUN node --version && \
     npm --version && \
