@@ -116,7 +116,7 @@ RUN mkdir -p /opt/runtime-rootfs && \
       rustc cargo
 
 RUN cd /opt/runtime-rootfs && \
-    for dir in bin sbin lib lib64; do \
+    for dir in bin sbin; do \
       if [ -d "$${dir}" ] && [ ! -L "$${dir}" ]; then \
         mkdir -p "usr/$${dir}"; \
         if [ -n "$(ls -A "$${dir}" 2>/dev/null)" ]; then \
@@ -125,7 +125,9 @@ RUN cd /opt/runtime-rootfs && \
         rm -rf "$${dir}"; \
         ln -s "usr/$${dir}" "$${dir}"; \
       fi; \
-    done
+    done && \
+    mkdir -p lib/x86_64-linux-gnu && \
+    cp -a usr/lib/x86_64-linux-gnu/. lib/x86_64-linux-gnu/
 
 RUN mkdir -p /opt/runtime-rootfs/app/.local/share /opt/runtime-rootfs/app/.config/opencode /opt/runtime-rootfs/app/.cache && \
     chown -R ${USER_UID}:${USER_GID} /opt/runtime-rootfs/app && \
