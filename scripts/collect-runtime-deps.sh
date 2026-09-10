@@ -93,16 +93,34 @@ for p in sorted(paths):
 }
 
 collect_node() {
-  [ -e /bin/sh ] && process /bin/sh
   for p in "${NODE_PATHS[@]}"; do
     [ -e "$p" ] && cp_with_parents "$p"
   done
 }
 
+collect_shell() {
+  local sh; sh="$(command -v sh)" || { echo "missing POSIX shell: sh" >&2; return 1; }
+  process "$sh"
+  local interpreter; interpreter="$(readlink -f "$sh")"
+  [ -n "$interpreter" ] && [ -e "$interpreter" ] || { echo "cannot resolve shell interpreter for $sh" >&2; return 1; }
+
+  # Ship the interpreter once and expose it at the standard shell paths. The
+  # links are absolute so they stay valid after the usr-merge step and wherever
+  # /bin surfaces in the final image.
+  mkdir -p "$ROOTFS/usr/bin" "$ROOTFS/bin"
+  rm -f "$ROOTFS/bin/sh" "$ROOTFS/usr/bin/sh"
+  ln -s "$interpreter" "$ROOTFS/usr/bin/sh"
+  ln -s "$interpreter" "$ROOTFS/bin/sh"
+}
+
 for exe in "$@"; do
   p="$(command -v "$exe")" || { echo "missing executable: $exe" >&2; exit 1; }
-  process "$p"
-  [ -e "$ROOTFS$p" ] || { echo "collector did not copy $exe to $ROOTFS" >&2; exit 1; }
+  if [ "$exe" = sh ]; then
+    collect_shell
+  else
+    process "$p"
+  fi
+  [ -e "$ROOTFS$p" ] || [ -L "$ROOTFS$p" ] || { echo "collector did not copy $exe to $ROOTFS" >&2; exit 1; }
 done
 
 for p in /etc/ssl/certs /usr/local/share/ca-certificates /etc/passwd /etc/group /etc/ld.so.cache \

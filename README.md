@@ -101,7 +101,7 @@ opencode-container --memory 8g --cpus 8
 
 The container applies several independent layers of restriction:
 
-- **Distroless runtime:** the final image has no shell and no package manager
+- **Distroless runtime:** no package manager and no compiler; a minimal POSIX shell (`/bin/sh`) is present because OpenCode's shell tool and npm require one
 - **Read-only root filesystem:** only `/tmp` (tmpfs) and mounted volumes are writable
 - **Dropped capabilities:** `--cap-drop=ALL` removes all Linux capabilities (principle of least privilege)
 - **No privilege escalation:** `--security-opt=no-new-privileges` blocks setuid/setgid exploits
@@ -254,7 +254,7 @@ The launcher also forwards these into the running container, so OpenCode inside 
 
 The image uses a multi-stage build with a distroless runtime:
 
-- **Base:** `gcr.io/distroless/base-debian13` (no shell, no package manager)
+- **Base:** `gcr.io/distroless/base-debian13` (no package manager; Debian `dash` is added as `/bin/sh` for OpenCode's shell tool and npm)
 - **Node.js:** Node 24 from NodeSource, runtime dependencies extracted via `collect-runtime-deps.sh`
 - **Python:** Python 3 with venv support from Debian 13
 - **OpenCode:** installed via the official, checksum-verified installer in the build stage

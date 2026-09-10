@@ -111,7 +111,7 @@ RUN mkdir -p /opt/runtime-rootfs && \
     /usr/local/bin/collect-runtime-deps.sh /opt/runtime-rootfs \
       opencode node npm python3 xclip wl-copy wl-paste git \
       mkdir find grep rg jq cat head tail sed awk \
-      ls cp mv rm chmod wc sort cut env date dirname basename \
+      ls cp mv rm chmod wc sort cut env date dirname basename sh \
       rustc cargo
 
 RUN cd /opt/runtime-rootfs && \
@@ -126,7 +126,8 @@ RUN cd /opt/runtime-rootfs && \
       fi; \
     done && \
     mkdir -p lib/x86_64-linux-gnu && \
-    cp -a usr/lib/x86_64-linux-gnu/. lib/x86_64-linux-gnu/
+    cp -a usr/lib/x86_64-linux-gnu/. lib/x86_64-linux-gnu/ && \
+    chroot /opt/runtime-rootfs /bin/sh -c 'command -v sh && echo shell-ok' | grep -qx shell-ok
 
 RUN mkdir -p /opt/runtime-rootfs/app/.local/share /opt/runtime-rootfs/app/.config/opencode /opt/runtime-rootfs/app/.cache && \
     chown -R ${USER_UID}:${USER_GID} /opt/runtime-rootfs/app && \
