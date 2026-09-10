@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import subprocess
 import sys
-import tempfile
-import time
-from collections.abc import Callable
 from pathlib import Path
 
 
@@ -35,35 +31,8 @@ def load_secrets(secrets_dir: Path = SECRETS_DIR, environ: dict[str, str] | None
         environ[name] = value
 
 
-def start_xvfb(popen=subprocess.Popen, sleep: Callable[[float], None] = time.sleep) -> None:
-    with tempfile.TemporaryFile() as stderr:
-        try:
-            process = popen(
-                ["Xvfb", ":99", "-screen", "0", "1024x768x24"],
-                stdout=subprocess.DEVNULL,
-                stderr=stderr,
-            )
-        except OSError as error:
-            raise RuntimeError("failed to start Xvfb on display :99") from error
-
-        deadline = time.monotonic() + 2.0
-        exit_code: int | None = None
-        while exit_code is None and time.monotonic() < deadline:
-            exit_code = process.poll()
-            if exit_code is None:
-                sleep(0.05)
-
-        if exit_code is not None:
-            stderr.seek(0)
-            detail = stderr.read().decode("utf-8", "replace").strip()
-            raise RuntimeError(
-                f"Xvfb exited (code {exit_code}) before OpenCode started: {detail}"
-            )
-
-
-def bootstrap(args: list[str], popen=subprocess.Popen, execvp=os.execvp) -> None:
+def bootstrap(args: list[str], execvp=os.execvp) -> None:
     load_secrets()
-    start_xvfb(popen)
     execvp("opencode", ["opencode", *args])
 
 

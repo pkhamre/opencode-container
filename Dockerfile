@@ -69,7 +69,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
     python3 \
     python3-venv \
-    xvfb \
     xclip \
     wl-clipboard \
     ripgrep \
@@ -110,7 +109,7 @@ ARG USER_GID=1000
 
 RUN mkdir -p /opt/runtime-rootfs && \
     /usr/local/bin/collect-runtime-deps.sh /opt/runtime-rootfs \
-      opencode node npm python3 Xvfb xkbcomp xclip wl-copy wl-paste git \
+      opencode node npm python3 xclip wl-copy wl-paste git \
       mkdir find grep rg jq cat head tail sed awk \
       ls cp mv rm chmod wc sort cut env date dirname basename \
       rustc cargo
@@ -141,7 +140,6 @@ ARG USER_GID=1000
 
 WORKDIR /app
 
-ENV DISPLAY=:99.0
 ENV HOME=/app
 ENV XDG_CONFIG_HOME=/app/.config
 ENV OPENCODE_CONFIG_DIR=/app/.config/opencode

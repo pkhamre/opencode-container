@@ -22,8 +22,7 @@ available to OpenCode. Secret filenames define their environment names.
 
 ## Bootstrap lifecycle
 
-The bootstrap lifecycle loads secrets, starts the display, and replaces itself
-with OpenCode. A failed display startup means the launch did not succeed.
+The bootstrap lifecycle loads secrets and replaces itself with OpenCode.
 
 ## Runtime dependency collection
 
