@@ -235,7 +235,7 @@ Place an optional PEM bundle named `custom-ca.crt` at the build-context root and
 
 This uses a BuildKit-capable builder to read the optional file without requiring a placeholder in the repository.
 
-The custom CA is installed before the remaining build-time HTTPS downloads, including NodeSource and OpenCode. The initial Debian package bootstrap still uses the base image's system trust.
+The custom CA is installed before the remaining build-time HTTPS downloads, including NodeSource and OpenCode. npm is configured to use the resulting system CA bundle for both build-time and runtime registry access. The initial Debian package bootstrap still uses the base image's system trust.
 
 ### Building Behind a Proxy
 

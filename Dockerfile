@@ -60,6 +60,9 @@ RUN --mount=type=bind,source=.,target=/build-context,ro \
       update-ca-certificates; \
     fi
 
+# npm does not automatically use Debian's system CA bundle for registry TLS.
+ENV NPM_CONFIG_CAFILE=/etc/ssl/certs/ca-certificates.crt
+
 RUN apt-get update && apt-get install --no-install-recommends -y \
     curl \
     gnupg \
@@ -114,13 +117,13 @@ RUN mkdir -p /opt/runtime-rootfs && \
 
 RUN cd /opt/runtime-rootfs && \
     for dir in bin sbin lib lib64; do \
-      if [ -d "${dir}" ] && [ ! -L "${dir}" ]; then \
-        mkdir -p "usr/${dir}"; \
-        if [ -n "$(ls -A "${dir}" 2>/dev/null)" ]; then \
-          cp -a "${dir}"/. "usr/${dir}"/; \
+      if [ -d "$${dir}" ] && [ ! -L "$${dir}" ]; then \
+        mkdir -p "usr/$${dir}"; \
+        if [ -n "$(ls -A "$${dir}" 2>/dev/null)" ]; then \
+          cp -a "$${dir}"/. "usr/$${dir}"/; \
         fi; \
-        rm -rf "${dir}"; \
-        ln -s "usr/${dir}" "${dir}"; \
+        rm -rf "$${dir}"; \
+        ln -s "usr/$${dir}" "$${dir}"; \
       fi; \
     done
 
@@ -142,6 +145,7 @@ ENV XDG_CONFIG_HOME=/app/.config
 ENV OPENCODE_CONFIG_DIR=/app/.config/opencode
 ENV XDG_DATA_HOME=/app/.local/share
 ENV PATH=/usr/local/bin:/usr/bin
+ENV NPM_CONFIG_CAFILE=/etc/ssl/certs/ca-certificates.crt
 
 COPY --from=collector /opt/runtime-rootfs/ /
 COPY --chmod=0755 bootstrap.py /usr/local/bin/bootstrap.py
