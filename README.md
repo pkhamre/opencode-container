@@ -229,6 +229,14 @@ docker build --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) -t open
 
 `make build` does this for you with whichever engine is installed (override with `ENGINE=docker` or `ENGINE=podman`).
 
+### Adding a Custom CA Bundle
+
+Place an optional PEM bundle named `custom-ca.crt` at the build-context root and run `make build`. The image keeps Debian's default certificates, splits and validates each certificate from the bundle, then runs `update-ca-certificates` after `ca-certificates` is installed. The normalized certificates are retained so hash-based TLS lookups continue to work in the distroless runtime.
+
+This uses a BuildKit-capable builder to read the optional file without requiring a placeholder in the repository.
+
+The custom CA is installed before the remaining build-time HTTPS downloads, including NodeSource and OpenCode. The initial Debian package bootstrap still uses the base image's system trust.
+
 ### Building Behind a Proxy
 
 Export the proxy variables in your shell and `make build` / `make build-builder-tools` forward them automatically as build args (both upper- and lower-case, so apt/curl/npm all pick them up):

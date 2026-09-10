@@ -105,7 +105,7 @@ for exe in "$@"; do
   [ -e "$ROOTFS$p" ] || { echo "collector did not copy $exe to $ROOTFS" >&2; exit 1; }
 done
 
-for p in /etc/ssl/certs /etc/passwd /etc/group /etc/ld.so.cache \
+for p in /etc/ssl/certs /usr/local/share/ca-certificates /etc/passwd /etc/group /etc/ld.so.cache \
          /etc/ld.so.conf /etc/ld.so.conf.d /usr/share/zoneinfo \
          /usr/share/X11; do
   if [ -e "$p" ]; then

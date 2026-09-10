@@ -29,8 +29,16 @@ jobs:
       - name: Build builder-tools stage
         run: docker build --target builder-tools -t opencode-container:builder-tools .
 
+      - name: Verify custom CA bundle build
+        run: |
+          trap 'rm -f custom-ca.crt /tmp/opencode-custom-ca.key' EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout /tmp/opencode-custom-ca.key -out custom-ca.crt \
+            -subj '/CN=opencode-container CI test CA'
+          docker build --target builder-tools -t opencode-container:builder-tools-custom-ca .
+
       - name: Run runtime collector tests
-        run: docker run --rm -v "$PWD:/work" -w /work opencode-container:builder-tools bash test_collect_runtime_deps.sh
+        run: docker run --rm -v "$PWD:/work" -w /work opencode-container:builder-tools-custom-ca bash test_collect_runtime_deps.sh
 
   build-publish:
     needs: test

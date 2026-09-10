@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 AS builder-tools
 
 ARG USER_UID=1000
@@ -24,6 +26,41 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     ca-certificates \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# The custom bundle is optional. Mounting the build context keeps it out of an
+# image layer until its individual certificates are installed into the trust store.
+RUN --mount=type=bind,source=.,target=/build-context,ro \
+    set -eu; \
+    if [ -s /build-context/custom-ca.crt ]; then \
+      mkdir -p /usr/local/share/ca-certificates; \
+      awk '\
+        /-----BEGIN CERTIFICATE-----/ {\
+          n++;\
+          output=sprintf("/usr/local/share/ca-certificates/opencode-custom-ca-%03d.crt", n);\
+          in_cert=1;\
+        }\
+        in_cert { print > output }\
+        /-----END CERTIFICATE-----/ { close(output); in_cert=0 }\
+      ' /build-context/custom-ca.crt; \
+      found=0; \
+      for certificate in /usr/local/share/ca-certificates/opencode-custom-ca-*.crt; do \
+        [ -f "$$certificate" ] || continue; \
+        found=1; \
+        if ! openssl x509 -in "$$certificate" -noout >/dev/null 2>&1; then \
+          echo "invalid PEM X.509 certificate in custom-ca.crt: $$certificate" >&2; \
+          exit 1; \
+        fi; \
+      done; \
+      if [ "$$found" -eq 0 ]; then \
+        echo "custom-ca.crt does not contain a PEM X.509 certificate" >&2; \
+        exit 1; \
+      fi; \
+      update-ca-certificates; \
+    fi
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
     curl \
     gnupg \
     git \
