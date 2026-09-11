@@ -124,9 +124,10 @@ RUN cd /opt/runtime-rootfs && \
         rm -rf "$${dir}"; \
       fi; \
     done && \
+    rm -rf bin sbin && \
     mkdir -p lib/x86_64-linux-gnu && \
     cp -a usr/lib/x86_64-linux-gnu/. lib/x86_64-linux-gnu/ && \
-    chroot /opt/runtime-rootfs /bin/sh -c 'command -v sh && echo shell-ok' | grep -qx shell-ok
+    chroot /opt/runtime-rootfs /usr/bin/sh -c 'command -v sh && echo shell-ok' | grep -qx shell-ok
 
 RUN mkdir -p /opt/runtime-rootfs/app/.local/share /opt/runtime-rootfs/app/.config/opencode /opt/runtime-rootfs/app/.cache && \
     chown -R ${USER_UID}:${USER_GID} /opt/runtime-rootfs/app && \
