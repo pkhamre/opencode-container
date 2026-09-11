@@ -46,14 +46,14 @@ RUN --mount=type=bind,source=.,target=/build-context,ro \
       ' /build-context/custom-ca.crt; \
       found=0; \
       for certificate in /usr/local/share/ca-certificates/opencode-custom-ca-*.crt; do \
-        [ -f "$$certificate" ] || continue; \
+        [ -f "$certificate" ] || continue; \
         found=1; \
-        if ! openssl x509 -in "$$certificate" -noout >/dev/null 2>&1; then \
-          echo "invalid PEM X.509 certificate in custom-ca.crt: $$certificate" >&2; \
+        if ! openssl x509 -in "$certificate" -noout >/dev/null 2>&1; then \
+          echo "invalid PEM X.509 certificate in custom-ca.crt: $certificate" >&2; \
           exit 1; \
         fi; \
       done; \
-      if [ "$$found" -eq 0 ]; then \
+      if [ "$found" -eq 0 ]; then \
         echo "custom-ca.crt does not contain a PEM X.509 certificate" >&2; \
         exit 1; \
       fi; \
@@ -116,19 +116,19 @@ RUN mkdir -p /opt/runtime-rootfs && \
 
 RUN cd /opt/runtime-rootfs && \
     for dir in bin sbin; do \
-      if [ -d "$${dir}" ] && [ ! -L "$${dir}" ]; then \
-        mkdir -p "usr/$${dir}"; \
-        if [ -n "$(ls -A "$${dir}" 2>/dev/null)" ]; then \
-          cp -a "$${dir}"/. "usr/$${dir}"/; \
+      if [ -d "${dir}" ] && [ ! -L "${dir}" ]; then \
+        mkdir -p "usr/${dir}"; \
+        if [ -n "$(ls -A "${dir}" 2>/dev/null)" ]; then \
+          cp -a "${dir}"/. "usr/${dir}"/; \
         fi; \
-        rm -rf "$${dir}"; \
+        rm -rf "${dir}"; \
       fi; \
     done && \
     rm -rf bin sbin && \
     for dir in lib lib64; do \
-      if [ -d "$${dir}" ] && [ ! -L "$${dir}" ]; then \
-        mkdir -p "usr/$${dir}"; \
-        cp -a "$${dir}"/. "usr/$${dir}"/; \
+      if [ -d "${dir}" ] && [ ! -L "${dir}" ]; then \
+        mkdir -p "usr/${dir}"; \
+        cp -a "${dir}"/. "usr/${dir}"/; \
       fi; \
     done && \
     rm -rf lib lib64 && \
