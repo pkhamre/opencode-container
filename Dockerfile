@@ -125,8 +125,13 @@ RUN cd /opt/runtime-rootfs && \
       fi; \
     done && \
     rm -rf bin sbin && \
-    mkdir -p lib/x86_64-linux-gnu && \
-    cp -a usr/lib/x86_64-linux-gnu/. lib/x86_64-linux-gnu/ && \
+    for dir in lib lib64; do \
+      if [ -d "$${dir}" ] && [ ! -L "$${dir}" ]; then \
+        mkdir -p "usr/$${dir}"; \
+        cp -a "$${dir}"/. "usr/$${dir}"/; \
+      fi; \
+    done && \
+    rm -rf lib lib64 && \
     chroot /opt/runtime-rootfs /usr/bin/sh -c 'command -v sh && echo shell-ok' | grep -qx shell-ok
 
 RUN mkdir -p /opt/runtime-rootfs/app/.local/share /opt/runtime-rootfs/app/.config/opencode /opt/runtime-rootfs/app/.cache && \
