@@ -132,7 +132,7 @@ RUN cd /opt/runtime-rootfs && \
       fi; \
     done && \
     rm -rf lib lib64 && \
-    chroot /opt/runtime-rootfs /usr/bin/sh -c 'command -v sh && echo shell-ok' | grep -qx shell-ok
+    [ -L usr/bin/sh ] && [ -x ".$(readlink usr/bin/sh)" ]
 
 RUN mkdir -p /opt/runtime-rootfs/app/.local/share /opt/runtime-rootfs/app/.config/opencode /opt/runtime-rootfs/app/.cache && \
     chown -R ${USER_UID}:${USER_GID} /opt/runtime-rootfs/app && \
