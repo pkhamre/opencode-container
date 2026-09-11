@@ -126,6 +126,9 @@ fi
 GITCONFIG_MOUNT=()
 if [ -f "$HOME/.gitconfig" ]; then
     GITCONFIG_MOUNT=(-v "$HOME/.gitconfig:/app/.gitconfig:ro")
+elif [ -f "$HOME/.config/git/config" ]; then
+    # Git also accepts its XDG config as the global config file.
+    GITCONFIG_MOUNT=(-v "$HOME/.config/git/config:/app/.gitconfig:ro")
 fi
 
 USERNS_ARGS=()
