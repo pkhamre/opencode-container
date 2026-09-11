@@ -122,7 +122,6 @@ RUN cd /opt/runtime-rootfs && \
           cp -a "$${dir}"/. "usr/$${dir}"/; \
         fi; \
         rm -rf "$${dir}"; \
-        ln -s "usr/$${dir}" "$${dir}"; \
       fi; \
     done && \
     mkdir -p lib/x86_64-linux-gnu && \
