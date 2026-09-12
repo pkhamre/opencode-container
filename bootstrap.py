@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 from pathlib import Path
 
 
 SECRETS_DIR = Path("/run/secrets")
+SUPPORTED_SECRET_NAMES = {
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "CONTEXT7_API_KEY",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+}
+ENVIRONMENT_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
 
 def env_var_name(secret_name: str) -> str:
@@ -23,6 +33,8 @@ def load_secrets(secrets_dir: Path = SECRETS_DIR, environ: dict[str, str] | None
             continue
 
         name = env_var_name(entry.name)
+        if name not in SUPPORTED_SECRET_NAMES or not ENVIRONMENT_NAME.fullmatch(name):
+            continue
         if name in seen:
             raise RuntimeError(f"secret name collision: {seen[name]} and {entry.name} -> {name}")
 

@@ -26,6 +26,9 @@ __pycache__/
 # OpenCode
 opencode.json
 .opencode/
+!.opencode/
+!.opencode/package.json
+!.opencode/package-lock.json
 .opencode/cache/
 .agents/
 skills-lock.json

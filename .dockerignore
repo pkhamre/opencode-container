@@ -12,3 +12,11 @@ __pycache__
 *.swo
 .DS_Store
 Thumbs.db
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json

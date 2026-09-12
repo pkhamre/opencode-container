@@ -19,22 +19,34 @@ def test_secret_loading() -> None:
         assert environment["ANTHROPIC_API_KEY"] == "key"
 
 
+def test_unsupported_secret_names_are_ignored() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        secrets = Path(directory)
+        (secrets / "PATH").write_text("not-a-path", encoding="utf-8")
+        (secrets / "unrelated-file").write_text("must-not-be-read", encoding="utf-8")
+        environment: dict[str, str] = {"PATH": "old"}
+
+        load_secrets(secrets, environment)
+
+        assert environment == {"PATH": "old"}
+
+
 def test_collisions_fail() -> None:
     with tempfile.TemporaryDirectory() as directory:
         secrets = Path(directory)
-        (secrets / "foo-bar").write_text("one", encoding="utf-8")
-        (secrets / "foo.bar").write_text("two", encoding="utf-8")
+        (secrets / "anthropic-api-key").write_text("one", encoding="utf-8")
+        (secrets / "anthropic.api.key").write_text("two", encoding="utf-8")
 
         try:
             load_secrets(secrets, {})
         except RuntimeError as error:
-            assert "FOO_BAR" in str(error)
+            assert "ANTHROPIC_API_KEY" in str(error)
         else:
             raise AssertionError("expected normalized secret name collision")
 
 
 class UnreadableEntry:
-    name = "secret"
+    name = "anthropic_api_key"
 
     def is_file(self) -> bool:
         return True
@@ -62,7 +74,7 @@ def test_unreadable_files_fail() -> None:
 
 def test_invalid_utf8_fails() -> None:
     with tempfile.TemporaryDirectory() as directory:
-        secret = Path(directory) / "secret"
+        secret = Path(directory) / "anthropic_api_key"
         secret.write_bytes(b"\xff")
 
         try:
@@ -93,6 +105,7 @@ def test_lifecycle_order_and_arguments() -> None:
 
 if __name__ == "__main__":
     test_secret_loading()
+    test_unsupported_secret_names_are_ignored()
     test_collisions_fail()
     test_unreadable_files_fail()
     test_invalid_utf8_fails()

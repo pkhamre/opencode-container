@@ -12,6 +12,8 @@ NODE_PATHS=()
 for tool in "${NODE_TOOLS[@]}"; do
   NODE_PATHS+=("/usr/bin/$tool" "/usr/lib/node_modules/$tool")
 done
+# Include application-installed modules used by OpenCode MCP/plugins.
+NODE_PATHS+=("/usr/lib/node_modules" "/usr/local/node_modules")
 
 cp_with_parents() {
   local src="$1"

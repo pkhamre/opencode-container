@@ -7,24 +7,18 @@ ARG USER_GID=1000
 ARG NODE_MAJOR=24
 ARG OPENCODE_VERSION=1.18.30
 
-# Proxy passthrough; both cases because apt/curl/gpg prefer lowercase,
-# npm/pip/git differ on which they read. Makefile normalizes so both arrive set.
+# BuildKit supplies proxy build arguments from the builder environment. They are
+# exported only for the commands that need them and are not stored as ENV.
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
-ENV HTTP_PROXY=${HTTP_PROXY} \
-    HTTPS_PROXY=${HTTPS_PROXY} \
-    NO_PROXY=${NO_PROXY} \
-    http_proxy=${http_proxy} \
-    https_proxy=${https_proxy} \
-    no_proxy=${no_proxy}
-
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
+    apt-get update && apt-get install --no-install-recommends -y \
     ca-certificates \
     openssl \
     && rm -rf /var/lib/apt/lists/*
@@ -63,7 +57,8 @@ RUN --mount=type=bind,source=.,target=/build-context,ro \
 # npm does not automatically use Debian's system CA bundle for registry TLS.
 ENV NPM_CONFIG_CAFILE=/etc/ssl/certs/ca-certificates.crt
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
+    apt-get update && apt-get install --no-install-recommends -y \
     curl \
     gnupg \
     git \
@@ -77,20 +72,29 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     cargo \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key -o /tmp/nodesource-repo.gpg.key && \
+    test "$(gpg --show-keys --with-colons --fingerprint /tmp/nodesource-repo.gpg.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6F71F525282841EEDAF851B42F59B5F99B1BE0B4" && \
+    gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg /tmp/nodesource-repo.gpg.key && \
+    rm -f /tmp/nodesource-repo.gpg.key && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && apt-get install --no-install-recommends -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-RUN echo "Installing OpenCode version: ${OPENCODE_VERSION}" && \
+RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
+    echo "Installing OpenCode version: ${OPENCODE_VERSION}" && \
     curl -fsSL https://opencode.ai/install -o /tmp/install-opencode.sh && \
     echo "fc3c1b2123f49b6df545a7622e5127d21cd794b15134fc3b66e1ca49f7fb297e  /tmp/install-opencode.sh" | sha256sum -c - && \
     bash /tmp/install-opencode.sh --version "${OPENCODE_VERSION}" --no-modify-path && \
     rm -f /tmp/install-opencode.sh && \
     install -m 0755 /root/.opencode/bin/opencode /usr/local/bin/opencode
 
-RUN npm install -g @upstash/context7-mcp@4.0.6
+COPY .opencode/package*.json /usr/local/
+RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
+    npm ci --prefix /usr/local --omit=dev --ignore-scripts --no-audit --no-fund --include=optional && \
+    ln -s /usr/local/node_modules/.bin/context7-mcp /usr/local/bin/context7-mcp && \
+    rm -f /usr/local/package.json /usr/local/package-lock.json
 
 RUN node --version && \
     npm --version && \
@@ -109,7 +113,7 @@ ARG USER_GID=1000
 
 RUN mkdir -p /opt/runtime-rootfs && \
     /usr/local/bin/collect-runtime-deps.sh /opt/runtime-rootfs \
-      opencode node npm python3 xclip wl-copy wl-paste git \
+      opencode node npm context7-mcp python3 xclip wl-copy wl-paste git \
       mkdir find grep rg jq cat head tail sed awk \
       ls cp mv rm chmod wc sort cut env date dirname basename sh \
       rustc cargo

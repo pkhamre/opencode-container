@@ -56,6 +56,7 @@ fi
 
 EXTRA_ENV=()
 HOST_ARGS=()
+HOST_ACCESS=0
 MEMORY_LIMIT="${MEMORY_LIMIT:-4g}"
 CPU_LIMIT="${CPU_LIMIT:-4}"
 
@@ -84,6 +85,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --host-access)
+            HOST_ACCESS=1
             case "$ENGINE" in
                 podman) HOST_ARGS+=(--add-host "host.containers.internal:host-gateway") ;;
                 *)      HOST_ARGS+=(--add-host "host.docker.internal:host-gateway") ;;
@@ -95,6 +97,15 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+reject_proxy_credentials() {
+    case "$1" in
+        *://*@*)
+            echo "error: proxy URLs with embedded credentials are not supported" >&2
+            exit 2
+            ;;
+    esac
+}
 
 if [ -d "$repo_dir/config" ]; then
   if [ "$UPDATE_CONFIG" = 1 ]; then
@@ -113,6 +124,8 @@ done
 EFF_HTTP_PROXY="${HTTP_PROXY:-${http_proxy:-}}"
 EFF_HTTPS_PROXY="${HTTPS_PROXY:-${https_proxy:-}}"
 EFF_NO_PROXY="${NO_PROXY:-${no_proxy:-}}"
+[ -n "$EFF_HTTP_PROXY" ] && reject_proxy_credentials "$EFF_HTTP_PROXY"
+[ -n "$EFF_HTTPS_PROXY" ] && reject_proxy_credentials "$EFF_HTTPS_PROXY"
 [ -n "$EFF_HTTP_PROXY" ] && ENV_ARGS+=(-e "HTTP_PROXY=$EFF_HTTP_PROXY" -e "http_proxy=$EFF_HTTP_PROXY")
 [ -n "$EFF_HTTPS_PROXY" ] && ENV_ARGS+=(-e "HTTPS_PROXY=$EFF_HTTPS_PROXY" -e "https_proxy=$EFF_HTTPS_PROXY")
 [ -n "$EFF_NO_PROXY" ] && ENV_ARGS+=(-e "NO_PROXY=$EFF_NO_PROXY" -e "no_proxy=$EFF_NO_PROXY")
@@ -123,18 +136,14 @@ else
     RUN_FLAGS="-i"
 fi
 
-GITCONFIG_MOUNT=()
-if [ -f "$HOME/.gitconfig" ]; then
-    GITCONFIG_MOUNT=(-v "$HOME/.gitconfig:/app/.gitconfig:ro")
-elif [ -f "$HOME/.config/git/config" ]; then
-    # Git also accepts its XDG config as the global config file.
-    GITCONFIG_MOUNT=(-v "$HOME/.config/git/config:/app/.gitconfig:ro")
-fi
-
 USERNS_ARGS=()
 if [ "$ENGINE" = podman ]; then
     # ponytail: keep-id is rootless-only; rootful podman (sudo) will reject it
     USERNS_ARGS=(--userns=keep-id)
+fi
+
+if [ "$HOST_ACCESS" = 1 ]; then
+    echo "warning: host access is enabled; OpenCode can reach host services through the container gateway" >&2
 fi
 
 # ponytail: --memory/--cpus need cgroup v2 + systemd user session, else rootless podman warns and ignores them
@@ -150,7 +159,6 @@ fi
     "${ENV_ARGS[@]}" \
     "${HOST_ARGS[@]}" \
     -v "$HOME/.opencode-container:/app:rw" \
-    "${GITCONFIG_MOUNT[@]}" \
     -v "$HOME/.opencode-container/config:/app/.config/opencode:rw" \
     -v "$HOME/.opencode-container/secrets:/run/secrets:ro" \
     -v "$WORKSPACE:/workspace:rw" \

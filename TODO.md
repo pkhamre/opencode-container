@@ -1,31 +1,27 @@
-# Security TODO — opencode-container
+# Security Backlog
 
-Audit date: 2026-05-28
+Review scope: entire repository, static review, all security areas.
 
-## CRITICAL
+## High
 
-- [x] **F1** — Pin OpenCode installer with SHA256 verification (`Dockerfile:30-35`)
-- [x] **F2** — Create `.dockerignore` to exclude `.git/`, `node_modules/`, `secrets/`, etc.
-- [x] **F3** — Pin external plugins: `@tarquinen/opencode-dcp` to exact version (`config/opencode.json`); `superpowers` plugin removed (2026-08-28)
+- [x] **F1** — Secret loading is restricted to the configured provider names. Unsupported files in `/run/secrets` are ignored (`bootstrap.py:10-18,35-37`). Supported secrets remain intentionally available to OpenCode commands and plugins.
+- [ ] **F2** — Partially addressed. NodeSource key fingerprint verification, locked npm dependencies, and pinned CI `pytest` are now present, but Debian and NodeSource package versions still come from mutable repositories (`Dockerfile:60-83`, `.opencode/package-lock.json`, `.github/workflows/release.yml:27`).
+- [x] **F3** — GitHub Actions are pinned to immutable commit SHAs with version comments (`.github/workflows/release.yml:18,21,52,57,60,67,92`).
+- [x] **F4** — Read access is defaulted globally and write access is limited to the publishing job (`.github/workflows/release.yml:8-9,14-15,47-49`).
 
-## HIGH
+## Medium
 
-- [x] **F4** — Pin global npm packages (`@upstash/context7-mcp@4.0.4`) (`Dockerfile:39`)
-- [x] **F5** — Pin `debian:13-slim` to SHA256 digest (`Dockerfile:1`); distroless pinning blocked on gcr.io auth (TODO added at `Dockerfile:77`)
-- [x] **F6** — Brainstorm port exposed on `0.0.0.0` — removed entirely
-- [ ] **F7** — Add BuildKit `--secret` infrastructure for build-time secrets (`Dockerfile`)
+- [x] **F5** — Proxy URLs with embedded credentials are rejected; build proxy arguments are not persisted as image `ENV` values (`Makefile:13-23`, `Dockerfile:10-17,20-24`, `bin/opencode-container:101-108,127-131`).
+- [x] **F6** — The host Git configuration is no longer mounted into the container (`bin/opencode-container:150-165`).
+- [x] **F8** — Host access remains opt-in, emits a warning, and documentation states engine/firewall-dependent reachability and authentication requirements (`bin/opencode-container:145-147`, `README.md:155-175`).
 
-## MEDIUM
+## Low / Medium
 
-- [ ] **F8** — Secrets loaded into process env — load selectively, only set required vars (`bootstrap.py:17-26`)
-- [ ] **F9** — Host `.gitconfig` mounted read-only — remove or sanitize (`bin/opencode-container:118-121`)
-- [ ] **F10** — Overlapping volume mounts (`/app` + `/app/.config/opencode`) — remove redundant mount or document (`bin/opencode-container:141-144`)
-- [ ] **F11** — No custom seccomp/AppArmor profile — add minimal syscall allowlist (`bin/opencode-container:130-146`)
-- [x] **F12** — `node_modules/` on disk — excluded via `.dockerignore`; remove from working tree if desired
+- [x] **F9** — Common environment, certificate, key, and credential filenames are excluded from the Docker build context (`.dockerignore:15-22`).
 
-## LOW
+## Review Limitations
 
-- [x] **F13** — `OPENCODE_VERSION=unknown` default — changed to `1.15.12` (`Dockerfile:6`)
-- [ ] **F14** — No `HEALTHCHECK` instruction — add `HEALTHCHECK CMD opencode --version || exit 1`
-- [x] **F15** — `docs/` exposed in build context — excluded via `.dockerignore`
-- [x] **F16** — `$RANDOM` for port selection — removed with brainstorm functionality
+- `npm audit --package-lock-only --audit-level=low` reported zero known vulnerabilities.
+- `python3 test_bootstrap.py`, Python compilation, JSON parsing, npm lockfile dry-run, and npm audit passed. Pytest, Bash, Make, and Docker/Podman are unavailable in this environment.
+- No secret values were inspected or printed.
+- No container image build or runtime integration test was possible because Docker/Podman are unavailable.

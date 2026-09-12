@@ -5,25 +5,28 @@ USER_UID := $(shell id -u)
 USER_GID := $(shell id -g)
 VERSION ?=
 
-# Forward host proxy env into the build (and make shell); each case derived from
-# whichever of HTTP_PROXY/http_proxy (etc.) the caller exported.
+# Forward host proxy env into make shell and the runtime container; each case is
+# derived from whichever of HTTP_PROXY/http_proxy (etc.) the caller exported.
 HTTP_PROXY_EFF := $(or $(HTTP_PROXY),$(http_proxy))
 HTTPS_PROXY_EFF := $(or $(HTTPS_PROXY),$(https_proxy))
 NO_PROXY_EFF := $(or $(NO_PROXY),$(no_proxy))
-PROXY_HTTP_BA := $(if $(HTTP_PROXY_EFF),--build-arg 'HTTP_PROXY=$(HTTP_PROXY_EFF)' --build-arg 'http_proxy=$(HTTP_PROXY_EFF)',)
-PROXY_HTTPS_BA := $(if $(HTTPS_PROXY_EFF),--build-arg 'HTTPS_PROXY=$(HTTPS_PROXY_EFF)' --build-arg 'https_proxy=$(HTTPS_PROXY_EFF)',)
-PROXY_NO_BA := $(if $(NO_PROXY_EFF),--build-arg 'NO_PROXY=$(NO_PROXY_EFF)' --build-arg 'no_proxy=$(NO_PROXY_EFF)',)
 PROXY_HTTP_RA := $(if $(HTTP_PROXY_EFF),-e 'HTTP_PROXY=$(HTTP_PROXY_EFF)' -e 'http_proxy=$(HTTP_PROXY_EFF)',)
 PROXY_HTTPS_RA := $(if $(HTTPS_PROXY_EFF),-e 'HTTPS_PROXY=$(HTTPS_PROXY_EFF)' -e 'https_proxy=$(HTTPS_PROXY_EFF)',)
 PROXY_NO_RA := $(if $(NO_PROXY_EFF),-e 'NO_PROXY=$(NO_PROXY_EFF)' -e 'no_proxy=$(NO_PROXY_EFF)',)
-PROXY_BUILD_ARGS := $(PROXY_HTTP_BA) $(PROXY_HTTPS_BA) $(PROXY_NO_BA)
 PROXY_RUN_ARGS := $(PROXY_HTTP_RA) $(PROXY_HTTPS_RA) $(PROXY_NO_RA)
 
+ifneq ($(findstring @,$(HTTP_PROXY_EFF)),)
+$(error HTTP_PROXY must not contain embedded credentials)
+endif
+ifneq ($(findstring @,$(HTTPS_PROXY_EFF)),)
+$(error HTTPS_PROXY must not contain embedded credentials)
+endif
+
 build:
-	$(ENGINE) build --build-arg USER_UID=$(USER_UID) --build-arg USER_GID=$(USER_GID) $(if $(VERSION),--build-arg OPENCODE_VERSION=$(VERSION),) $(PROXY_BUILD_ARGS) -t opencode-container$(if $(VERSION),:$(VERSION),) .
+	$(ENGINE) build --build-arg USER_UID=$(USER_UID) --build-arg USER_GID=$(USER_GID) $(if $(VERSION),--build-arg OPENCODE_VERSION=$(VERSION),) -t opencode-container$(if $(VERSION),:$(VERSION),) .
 
 build-builder-tools:
-	$(ENGINE) build --build-arg USER_UID=$(USER_UID) --build-arg USER_GID=$(USER_GID) $(if $(VERSION),--build-arg OPENCODE_VERSION=$(VERSION),) $(PROXY_BUILD_ARGS) --target builder-tools -t opencode-container:builder-tools .
+	$(ENGINE) build --build-arg USER_UID=$(USER_UID) --build-arg USER_GID=$(USER_GID) $(if $(VERSION),--build-arg OPENCODE_VERSION=$(VERSION),) --target builder-tools -t opencode-container:builder-tools .
 
 tag-latest:
 ifndef VERSION

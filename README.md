@@ -116,10 +116,12 @@ API keys live as plain files on the host and are loaded at container start — t
 ### How It Works
 
 1. Set up one file per key as shown in [Quick Start](#quick-start) (`~/.opencode-container/secrets/`, directory `700`, files `600`).
-2. The runtime bootstrap (`bootstrap.py`) reads every file in `/run/secrets` and exports it as an environment variable:
-   - Filenames are uppercased; dashes and dots become underscores
-   - Example: `anthropic_api_key` becomes `ANTHROPIC_API_KEY`
-3. Any filename works — the table below lists the providers OpenCode commonly uses.
+2. The runtime bootstrap (`bootstrap.py`) reads only supported secret filenames
+   from `/run/secrets` and exports them as environment variables.
+   Unsupported files are ignored. Filenames are uppercased; dashes and dots
+   become underscores.
+3. The table below lists the supported provider secrets. Other filenames do not
+   create environment variables.
 
 ### Commonly Used Secrets
 
@@ -132,7 +134,10 @@ API keys live as plain files on the host and are loaded at container start — t
 | `aws_access_key_id` | `AWS_ACCESS_KEY_ID` | AWS Bedrock |
 | `aws_secret_access_key` | `AWS_SECRET_ACCESS_KEY` | AWS Bedrock |
 
-**Note:** the wrapper mounts these files read-only at `/run/secrets`; the runtime bootstrap loads them directly into the process environment. This avoids copying secrets into a second host file or exposing them on the command line.
+**Note:** the launcher mounts these files read-only at `/run/secrets`; the
+bootstrap loads supported secrets directly into the OpenCode process
+environment. OpenCode commands and plugins can therefore access configured
+provider secrets. Do not place unrelated files in the secrets directory.
 
 ## Data Persistence & Configuration
 
@@ -149,7 +154,10 @@ When using the wrapper script (`bin/opencode-container`):
 
 ### Accessing Host Services
 
-By default the container is network-isolated from the host — `127.0.0.1` inside the container is the container itself, so host services are unreachable. Launch with `--host-access` to add an engine-appropriate host alias:
+By default, `127.0.0.1` inside the container refers to the container itself.
+The default bridge network can still have engine- and host-firewall-dependent
+reachability to host or local-network services. Launch with `--host-access` to
+add an engine-appropriate host alias:
 
 ```bash
 opencode-container --host-access
@@ -160,7 +168,11 @@ Inside the container, reach host ports via:
 - **Docker:** `http://host.docker.internal:<port>`
 - **Podman:** `http://host.containers.internal:<port>`
 
-**Linux prerequisite:** on Linux, host services must listen beyond `127.0.0.1` — bind them to `0.0.0.0` (or, with Docker, the bridge IP usually `172.17.0.1`), otherwise you get connection refused.
+The launcher prints a warning when host access is enabled. Host services must
+authenticate requests and should not expose administrative endpoints to the
+agent. On Linux, host services must listen beyond `127.0.0.1` — bind them to
+`0.0.0.0` (or, with Docker, the bridge IP usually `172.17.0.1`) if access is
+required.
 
 **Example — OmniRoute gateway:** with Omniroute listening on port 20128, paste this into `~/.opencode-container/config/opencode.json`, then launch `opencode-container --host-access`. It serves an OpenAI-compatible `/v1` and is keyless by default; if a key is ever needed, add `"apiKey": "{env:OMNIROUTE_API_KEY}"` under `options`. Podman users: use `host.containers.internal` in `baseURL` instead.
 
@@ -239,7 +251,7 @@ The custom CA is installed before the remaining build-time HTTPS downloads, incl
 
 ### Building Behind a Proxy
 
-Export the proxy variables in your shell and `make build` / `make build-builder-tools` forward them automatically as build args (both upper- and lower-case, so apt/curl/npm all pick them up):
+Export credential-free proxy variables in your shell and `make build` / `make build-builder-tools`. BuildKit supplies them to network commands without storing them as image `ENV` values; runtime commands receive both upper- and lower-case forms (so apt/curl/npm all pick them up):
 
 ```bash
 export HTTP_PROXY=http://proxy.example:3128
@@ -248,7 +260,13 @@ export NO_PROXY=localhost,127.0.0.1
 make build
 ```
 
-The launcher also forwards these into the running container, so OpenCode inside it can reach the network. If a previously failed (no-proxy) build left stale layers, run `make prune-cache` first. Note: if your proxy terminates TLS with a corporate CA certificate, build-time certificate validation will still fail unless that CA is added to the image.
+Credential-free proxy URLs are forwarded into the running container, so
+OpenCode inside it can reach the network. Proxy URLs containing embedded
+credentials are rejected; use a credential-free proxy or configure proxy
+authentication outside this launcher. If a previously failed (no-proxy) build
+left stale layers, run `make prune-cache` first. Note: if your proxy terminates
+TLS with a corporate CA certificate, build-time certificate validation will
+still fail unless that CA is added to the image.
 
 ### Runtime Details
 
@@ -259,4 +277,4 @@ The image uses a multi-stage build with a distroless runtime:
 - **Python:** Python 3 with venv support from Debian 13
 - **OpenCode:** installed via the official, checksum-verified installer in the build stage
 - **Runtime collector:** resolves and verifies every executable in the Dockerfile manifest before the final image is assembled
-- **Bootstrap:** `bootstrap.py` loads secrets from `/run/secrets`, then execs OpenCode
+- **Bootstrap:** `bootstrap.py` loads supported secrets from `/run/secrets`, then execs OpenCode
