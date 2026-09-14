@@ -55,9 +55,10 @@ collect_ldd() {
 
 process() {
   local resolved; resolved="$(readlink -f "$1")"
+  # Preserve every requested entry, including multiple symlinks to one target.
+  cp_with_parents "$1"
   [ -n "${PROCESSED[$resolved]:-}" ] && return
   PROCESSED[$resolved]=1
-  cp_with_parents "$1"
   collect_ldd "$1"
   local shebang; IFS= read -r shebang < "$1" 2>/dev/null || true
   if [[ "$shebang" == '#!'* ]]; then

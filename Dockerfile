@@ -114,6 +114,7 @@ ARG USER_GID=1000
 RUN mkdir -p /opt/runtime-rootfs && \
     /usr/local/bin/collect-runtime-deps.sh /opt/runtime-rootfs \
       opencode node npm context7-mcp python3 xclip wl-copy wl-paste git \
+      /usr/lib/git-core/git-remote-http /usr/lib/git-core/git-remote-https \
       mkdir find grep rg jq cat head tail sed awk \
       ls cp mv rm chmod wc sort cut env date dirname basename sh \
       rustc cargo
