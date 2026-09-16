@@ -5,7 +5,7 @@ FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c70
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG NODE_MAJOR=24
-ARG OPENCODE_VERSION=1.18.30
+ARG OPENCODE_VERSION=1.18.31
 
 # BuildKit supplies proxy build arguments from the builder environment. They are
 # exported only for the commands that need them and are not stored as ENV.
@@ -64,12 +64,8 @@ RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_prox
     git \
     python3 \
     python3-venv \
-    xclip \
-    wl-clipboard \
     ripgrep \
     jq \
-    rustc \
-    cargo \
     && rm -rf /var/lib/apt/lists/*
 
 RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
@@ -80,6 +76,7 @@ RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_prox
     rm -f /tmp/nodesource-repo.gpg.key && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && apt-get install --no-install-recommends -y nodejs && \
+    npm install --global --no-audit --no-fund npm@12.0.2 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
@@ -113,11 +110,10 @@ ARG USER_GID=1000
 
 RUN mkdir -p /opt/runtime-rootfs && \
     /usr/local/bin/collect-runtime-deps.sh /opt/runtime-rootfs \
-      opencode node npm context7-mcp python3 xclip wl-copy wl-paste git \
+      opencode node npm context7-mcp python3 git \
       /usr/lib/git-core/git-remote-http /usr/lib/git-core/git-remote-https \
       mkdir find grep rg jq cat head tail sed awk \
-      ls cp mv rm chmod wc sort cut env date dirname basename sh \
-      rustc cargo
+      ls cp mv rm chmod wc sort cut env date dirname basename sh
 
 RUN cd /opt/runtime-rootfs && \
     for dir in bin sbin; do \

@@ -127,15 +127,8 @@ for exe in "$@"; do
 done
 
 for p in /etc/ssl/certs /usr/local/share/ca-certificates /etc/passwd /etc/group /etc/ld.so.cache \
-         /etc/ld.so.conf /etc/ld.so.conf.d /usr/share/zoneinfo \
-         /usr/share/X11; do
+         /etc/ld.so.conf /etc/ld.so.conf.d /usr/share/zoneinfo; do
   if [ -e "$p" ]; then
     cp_with_parents "$p"
-  fi
-done
-
-for modroot in /usr/lib/xorg/modules /usr/lib/*/xorg/modules; do
-  if [ -e "$modroot" ]; then
-    cp_with_parents "$modroot"
   fi
 done
