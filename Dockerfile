@@ -5,7 +5,7 @@ FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c70
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG NODE_MAJOR=24
-ARG OPENCODE_VERSION=1.18.31
+ARG OPENCODE_VERSION=2.0.9
 
 # BuildKit supplies proxy build arguments from the builder environment. They are
 # exported only for the commands that need them and are not stored as ENV.
@@ -81,8 +81,8 @@ RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_prox
 
 RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
     echo "Installing OpenCode version: ${OPENCODE_VERSION}" && \
-    curl -fsSL https://opencode.ai/install -o /tmp/install-opencode.sh && \
-    echo "fc3c1b2123f49b6df545a7622e5127d21cd794b15134fc3b66e1ca49f7fb297e  /tmp/install-opencode.sh" | sha256sum -c - && \
+    curl -fsSL https://opencode.ai/v2/install -o /tmp/install-opencode.sh && \
+    echo "bc70dd317fd12ef09350cdb1667e55e19f9e7b3d2897d3a1b750b165ae579d87  /tmp/install-opencode.sh" | sha256sum -c - && \
     bash /tmp/install-opencode.sh --version "${OPENCODE_VERSION}" --no-modify-path && \
     rm -f /tmp/install-opencode.sh && \
     install -m 0755 /root/.opencode/bin/opencode /usr/local/bin/opencode

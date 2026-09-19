@@ -30,12 +30,12 @@ build-builder-tools:
 
 tag-latest:
 ifndef VERSION
-	$(error VERSION is required. Usage: make tag-latest VERSION=1.18.18)
+	$(error VERSION is required. Usage: make tag-latest VERSION=2.0.9)
 endif
 	$(ENGINE) tag opencode-container:$(VERSION) opencode-container:latest
 
 build-latest:
-	@VERSION=$$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name' | sed 's/^v//') && \
+	@VERSION=$$(curl -fsSL https://registry.npmjs.org/%40opencode%2Fcli | jq -r '."dist-tags".latest') && \
 	echo "Building opencode-container:$$VERSION..." && \
 	$(MAKE) build VERSION=$$VERSION && \
 	$(MAKE) tag-latest VERSION=$$VERSION

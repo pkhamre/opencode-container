@@ -197,9 +197,9 @@ required.
 
 ```bash
 make build                      # Build with auto-detected UID/GID
-make build VERSION=1.18.18      # Build a specific OpenCode version
+make build VERSION=2.0.9         # Build a specific OpenCode version
 make build-latest               # Build the latest OpenCode release
-make tag-latest VERSION=1.18.18 # Tag a built version as latest
+make tag-latest VERSION=2.0.9    # Tag a built version as latest
 make shell                      # Debug shell (builder-tools stage with bash)
 make clean                      # Remove image
 ```
@@ -236,7 +236,7 @@ docker build -t opencode-container .
 docker build --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) -t opencode-container .
 
 # With version tag
-docker build --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) -t opencode-container:1.18.18 .
+docker build --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) -t opencode-container:2.0.9 .
 ```
 
 `make build` does this for you with whichever engine is installed (override with `ENGINE=docker` or `ENGINE=podman`).
