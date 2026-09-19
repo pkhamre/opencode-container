@@ -45,10 +45,10 @@ shell: build-builder-tools
 	$(ENGINE) run --rm -it --workdir /workspace --read-only \
 		--tmpfs /tmp:exec,size=512m,mode=1777 --cap-drop=ALL \
 		--security-opt=no-new-privileges --memory=2g --cpus=2 \
-		-v $(shell pwd)/homebase:/app:rw \
-		-v $(shell pwd)/config:/app/.config/opencode:rw \
-		-v $(shell pwd)/workspace:/workspace:rw \
-		-v $(shell pwd)/secrets:/run/secrets:ro \
+		-v $(shell pwd)/homebase:/app:rw,Z \
+		-v $(shell pwd)/config:/app/.config/opencode:rw,Z \
+		-v $(shell pwd)/workspace:/workspace:rw,Z \
+		-v $(shell pwd)/secrets:/run/secrets:ro,Z \
 		$(PROXY_RUN_ARGS) \
 		--entrypoint /bin/bash \
 		opencode-container:builder-tools

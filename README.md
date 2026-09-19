@@ -108,6 +108,7 @@ The container applies several independent layers of restriction:
 - **Non-root user:** runs as UID 1000 (configurable at build time)
 - **Resource limits:** the wrapper defaults to 4 GB memory / 4 CPUs
 - **File-based secrets:** keys mounted read-only at `/run/secrets` — never baked into the image or passed on the command line
+- **SELinux-compatible bind mounts:** host mounts use the private `:Z` label so Fedora's SELinux policy permits the image to access them
 
 ## Secrets Management
 
@@ -138,6 +139,10 @@ API keys live as plain files on the host and are loaded at container start — t
 bootstrap loads supported secrets directly into the OpenCode process
 environment. OpenCode commands and plugins can therefore access configured
 provider secrets. Do not place unrelated files in the secrets directory.
+
+On SELinux-enabled hosts such as Fedora, the launcher applies the private
+`:Z` label to its bind mounts automatically. This relabels the mounted paths
+for container use while leaving their normal permissions unchanged.
 
 ## Data Persistence & Configuration
 
@@ -219,10 +224,10 @@ docker run --rm -it \
   --security-opt=no-new-privileges \
   --memory=2g \
   --cpus=2 \
-  -v ~/.opencode-container:/app:rw \
-  -v /path/to/opencode-container/config:/app/.config/opencode:rw \
-  -v $(pwd):/workspace:rw \
-  -v ~/.opencode-container/secrets:/run/secrets:ro \
+  -v ~/.opencode-container:/app:rw,Z \
+  -v /path/to/opencode-container/config:/app/.config/opencode:rw,Z \
+  -v $(pwd):/workspace:rw,Z \
+  -v ~/.opencode-container/secrets:/run/secrets:ro,Z \
   opencode-container
 ```
 

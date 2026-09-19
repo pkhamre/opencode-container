@@ -158,8 +158,8 @@ fi
     --cpus="${CPU_LIMIT}" \
     "${ENV_ARGS[@]}" \
     "${HOST_ARGS[@]}" \
-    -v "$HOME/.opencode-container:/app:rw" \
-    -v "$HOME/.opencode-container/config:/app/.config/opencode:rw" \
-    -v "$HOME/.opencode-container/secrets:/run/secrets:ro" \
-    -v "$WORKSPACE:/workspace:rw" \
+    -v "$HOME/.opencode-container:/app:rw,Z" \
+    -v "$HOME/.opencode-container/config:/app/.config/opencode:rw,Z" \
+    -v "$HOME/.opencode-container/secrets:/run/secrets:ro,Z" \
+    -v "$WORKSPACE:/workspace:rw,Z" \
     opencode-container:latest "$@"

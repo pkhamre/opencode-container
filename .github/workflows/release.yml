@@ -27,6 +27,9 @@ jobs:
           python -m pip install --quiet pytest==8.4.1
           python -m pytest test_bootstrap.py -v
 
+      - name: Run launcher tests
+        run: ./test_launcher.sh
+
       - name: Build builder-tools stage
         run: docker build --target builder-tools -t opencode-container:builder-tools .
 
