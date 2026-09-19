@@ -11,7 +11,6 @@ TRUE_PATH="$(command -v /bin/true)"
 [ -e "$ROOTFS$TRUE_PATH" ]
 [ -e "$ROOTFS/usr/lib/git-core/git-remote-http" ]
 [ -e "$ROOTFS/usr/lib/git-core/git-remote-https" ]
-[ -x "$ROOTFS/usr/lib/git-core/git-remote-curl" ]
 [ -e "$ROOTFS/usr/local/share/ca-certificates" ]
 
 # The shell is exposed at the standard paths; links are absolute, so resolve
