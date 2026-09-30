@@ -87,12 +87,6 @@ RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_prox
     rm -f /tmp/install-opencode.sh && \
     install -m 0755 /root/.opencode/bin/opencode /usr/local/bin/opencode
 
-COPY .opencode/package*.json /usr/local/
-RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
-    npm ci --prefix /usr/local --omit=dev --ignore-scripts --no-audit --no-fund --include=optional && \
-    ln -s /usr/local/node_modules/.bin/context7-mcp /usr/local/bin/context7-mcp && \
-    rm -f /usr/local/package.json /usr/local/package-lock.json
-
 RUN node --version && \
     npm --version && \
     python3 --version && \
@@ -110,7 +104,7 @@ ARG USER_GID=1000
 
 RUN mkdir -p /opt/runtime-rootfs && \
     /usr/local/bin/collect-runtime-deps.sh /opt/runtime-rootfs \
-      opencode node npm context7-mcp python3 git \
+      opencode node npm python3 git \
       /usr/lib/git-core/git-remote-http /usr/lib/git-core/git-remote-https \
       mkdir find grep rg jq cat head tail sed awk \
       ls cp mv rm chmod wc sort cut env date dirname basename sh

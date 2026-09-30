@@ -23,9 +23,7 @@ jobs:
           python-version: '3.12'
 
       - name: Run bootstrap tests
-        run: |
-          python -m pip install --quiet pytest==8.4.1
-          python -m pytest test_bootstrap.py -v
+        run: python test_bootstrap.py
 
       - name: Run launcher tests
         run: ./test_launcher.sh

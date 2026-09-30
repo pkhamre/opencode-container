@@ -12,8 +12,7 @@ NODE_PATHS=()
 for tool in "${NODE_TOOLS[@]}"; do
   NODE_PATHS+=("/usr/bin/$tool" "/usr/lib/node_modules/$tool")
 done
-# Include application-installed modules used by OpenCode MCP/plugins.
-NODE_PATHS+=("/usr/lib/node_modules" "/usr/local/node_modules")
+NODE_PATHS+=("/usr/lib/node_modules")
 
 cp_with_parents() {
   local src="$1"
@@ -26,11 +25,6 @@ cp_with_parents() {
   else
     cp -aT "$src" "$dst"
   fi
-}
-
-ldd_path() {
-  local path="${1%%(*}"
-  echo "${path%)}"
 }
 
 collect_ldd() {
@@ -46,7 +40,7 @@ collect_ldd() {
     for token in $line; do
       [[ "$token" == /* ]] || continue
       # strip trailing load-address, e.g. "/lib/x.so (0x...)" -> "/lib/x.so"
-      local p; p="$(ldd_path "$token")"
+      local p="${token%%(*}"; p="${p%)}"
       [ -e "$p" ] || { echo "missing shared library $p for $1" >&2; return 1; }
       cp_with_parents "$p"
     done

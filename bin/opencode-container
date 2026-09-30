@@ -54,7 +54,7 @@ if [ ! -d "$WORKSPACE" ]; then
     exit 1
 fi
 
-EXTRA_ENV=()
+ENV_ARGS=()
 HOST_ARGS=()
 HOST_ACCESS=0
 MEMORY_LIMIT="${MEMORY_LIMIT:-4g}"
@@ -67,11 +67,11 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -w|--websearch)
-            EXTRA_ENV+=("OPENCODE_ENABLE_EXA=1")
+            ENV_ARGS+=(--env "OPENCODE_ENABLE_EXA=1")
             shift
             ;;
         -e|--experimental)
-            EXTRA_ENV+=("OPENCODE_EXPERIMENTAL=1" "OPENCODE_ENABLE_EXPERIMENTAL_MODELS=1")
+            ENV_ARGS+=(--env "OPENCODE_EXPERIMENTAL=1" --env "OPENCODE_ENABLE_EXPERIMENTAL_MODELS=1")
             shift
             ;;
         --memory)
@@ -114,11 +114,6 @@ if [ -d "$repo_dir/config" ]; then
     cp -a --update=none "$repo_dir/config/." "$ocd_dir/config/"
   fi
 fi
-
-ENV_ARGS=()
-for assignment in "${EXTRA_ENV[@]}"; do
-    ENV_ARGS+=(--env "$assignment")
-done
 
 # Forward host proxy settings (both cases; tools differ on which they read)
 EFF_HTTP_PROXY="${HTTP_PROXY:-${http_proxy:-}}"

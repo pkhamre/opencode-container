@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@opencode-ai/plugin": "1.18.31",
-    "@upstash/context7-mcp": "4.1.1"
-  }
-}
