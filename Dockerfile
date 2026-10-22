@@ -82,7 +82,7 @@ RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_prox
 RUN export http_proxy="${http_proxy:-${HTTP_PROXY:-}}" https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" no_proxy="${no_proxy:-${NO_PROXY:-}}"; \
     echo "Installing OpenCode version: ${OPENCODE_VERSION}" && \
     curl -fsSL https://opencode.ai/v2/install -o /tmp/install-opencode.sh && \
-    echo "bc70dd317fd12ef09350cdb1667e55e19f9e7b3d2897d3a1b750b165ae579d87  /tmp/install-opencode.sh" | sha256sum -c - && \
+    echo "bfa0e5cd55b0447acdb1becbd3be1854277b5f8025742bd23ebf91bc01aa8ee8  /tmp/install-opencode.sh" | sha256sum -c - && \
     bash /tmp/install-opencode.sh --version "${OPENCODE_VERSION}" --no-modify-path && \
     rm -f /tmp/install-opencode.sh && \
     install -m 0755 /root/.opencode/bin/opencode /usr/local/bin/opencode
